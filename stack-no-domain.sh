@@ -14,6 +14,19 @@ WHITE='\033[1;37m'
 GRAY='\033[0;37m'
 NC='\033[0m' # No Color
 
+# Detect docker-compose command
+if command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE="docker-compose"
+elif docker compose version &> /dev/null; then
+    DOCKER_COMPOSE="docker compose"
+else
+    echo -e "${RED}Error: Neither 'docker-compose' nor 'docker compose' found!${NC}"
+    echo -e "${YELLOW}Please install Docker Compose:${NC}"
+    echo -e "${WHITE}  sudo apt-get update${NC}"
+    echo -e "${WHITE}  sudo apt-get install docker-compose-plugin${NC}"
+    exit 1
+fi
+
 show_help() {
     echo -e "\n${CYAN}🚀 Stack Server Management (No Domain)${NC}\n"
     echo -e "${WHITE}Usage: ./stack-no-domain.sh [command]${NC}\n"
@@ -40,7 +53,7 @@ get_server_ip() {
 
 start_stack() {
     echo -e "\n${CYAN}🚀 Starting Stack Server (No Domain Mode)...${NC}\n"
-    docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml up -d
+    $DOCKER_COMPOSE -f docker-compose.yml -f docker-compose.no-domain.yml up -d
     
     SERVER_IP=$(get_server_ip)
     
@@ -58,24 +71,24 @@ start_stack() {
 
 stop_stack() {
     echo -e "\n${CYAN}🛑 Stopping Stack Server...${NC}\n"
-    docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml down
+    $DOCKER_COMPOSE -f docker-compose.yml -f docker-compose.no-domain.yml down
     echo -e "\n${GREEN}✅ Stack Server stopped successfully!${NC}\n"
 }
 
 restart_stack() {
     echo -e "\n${CYAN}🔄 Restarting Stack Server...${NC}\n"
-    docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml restart
+    $DOCKER_COMPOSE -f docker-compose.yml -f docker-compose.no-domain.yml restart
     echo -e "\n${GREEN}✅ Stack Server restarted successfully!${NC}\n"
 }
 
 show_status() {
     echo -e "\n${CYAN}📊 Stack Server Status${NC}\n"
-    docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml ps
+    $DOCKER_COMPOSE -f docker-compose.yml -f docker-compose.no-domain.yml ps
 }
 
 show_logs() {
     echo -e "\n${CYAN}📋 Stack Server Logs (Press Ctrl+C to exit)${NC}\n"
-    docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml logs -f
+    $DOCKER_COMPOSE -f docker-compose.yml -f docker-compose.no-domain.yml logs -f
 }
 
 clean_stack() {
@@ -83,7 +96,7 @@ clean_stack() {
     read -p "Are you sure you want to continue? (yes/no): " confirmation
     if [ "$confirmation" = "yes" ]; then
         echo -e "\n${CYAN}🧹 Cleaning Stack Server...${NC}\n"
-        docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml down -v
+        $DOCKER_COMPOSE -f docker-compose.yml -f docker-compose.no-domain.yml down -v
         echo -e "\n${GREEN}✅ Stack Server cleaned successfully!${NC}\n"
     else
         echo -e "\n${YELLOW}❌ Operation cancelled${NC}\n"

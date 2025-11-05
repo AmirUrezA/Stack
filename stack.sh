@@ -14,6 +14,19 @@ WHITE='\033[1;37m'
 GRAY='\033[0;37m'
 NC='\033[0m' # No Color
 
+# Detect docker-compose command
+if command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE="docker-compose"
+elif docker compose version &> /dev/null; then
+    DOCKER_COMPOSE="docker compose"
+else
+    echo -e "${RED}Error: Neither 'docker-compose' nor 'docker compose' found!${NC}"
+    echo -e "${YELLOW}Please install Docker Compose:${NC}"
+    echo -e "${WHITE}  sudo apt-get update${NC}"
+    echo -e "${WHITE}  sudo apt-get install docker-compose-plugin${NC}"
+    exit 1
+fi
+
 show_help() {
     echo -e "\n${CYAN}🚀 Stack Server Management${NC}\n"
     echo -e "${WHITE}Usage: ./stack.sh [command]${NC}\n"
@@ -33,7 +46,7 @@ show_help() {
 
 start_stack() {
     echo -e "\n${CYAN}🚀 Starting Stack Server...${NC}\n"
-    docker-compose up -d
+    $DOCKER_COMPOSE up -d
     echo -e "\n${GREEN}✅ Stack Server started successfully!${NC}"
     echo -e "\n${YELLOW}Services available at:${NC}"
     echo -e "${WHITE}  Traefik:     http://localhost:8888${NC}"
@@ -47,24 +60,24 @@ start_stack() {
 
 stop_stack() {
     echo -e "\n${CYAN}🛑 Stopping Stack Server...${NC}\n"
-    docker-compose down
+    $DOCKER_COMPOSE down
     echo -e "\n${GREEN}✅ Stack Server stopped successfully!${NC}\n"
 }
 
 restart_stack() {
     echo -e "\n${CYAN}🔄 Restarting Stack Server...${NC}\n"
-    docker-compose restart
+    $DOCKER_COMPOSE restart
     echo -e "\n${GREEN}✅ Stack Server restarted successfully!${NC}\n"
 }
 
 show_status() {
     echo -e "\n${CYAN}📊 Stack Server Status${NC}\n"
-    docker-compose ps
+    $DOCKER_COMPOSE ps
 }
 
 show_logs() {
     echo -e "\n${CYAN}📋 Stack Server Logs (Press Ctrl+C to exit)${NC}\n"
-    docker-compose logs -f
+    $DOCKER_COMPOSE logs -f
 }
 
 clean_stack() {
@@ -72,7 +85,7 @@ clean_stack() {
     read -p "Are you sure you want to continue? (yes/no): " confirmation
     if [ "$confirmation" = "yes" ]; then
         echo -e "\n${CYAN}🧹 Cleaning Stack Server...${NC}\n"
-        docker-compose down -v
+        $DOCKER_COMPOSE down -v
         echo -e "\n${GREEN}✅ Stack Server cleaned successfully!${NC}\n"
     else
         echo -e "\n${YELLOW}❌ Operation cancelled${NC}\n"
