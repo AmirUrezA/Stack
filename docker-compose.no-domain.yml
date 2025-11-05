@@ -1,56 +1,50 @@
 # Docker Compose Override for Server without Domain
 # 
 # This configuration enables direct port access without needing a domain name.
+# Traefik is kept for dashboard but services are accessible via direct ports.
 # Use it with: docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml up -d
-#
-# Or copy this to docker-compose.override.yml to apply automatically
 
 version: '3.8'
 
 services:
-  # Keep Traefik but only for the dashboard
+  # Keep Traefik running but disable routing
   traefik:
     command:
       - "--api.dashboard=true"
       - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
       - "--log.level=INFO"
-      # Add minimal entrypoint to prevent errors
-      - "--entrypoints.web.address=:80"
     ports:
-      - "8888:8080"   # Dashboard
-      - "80:80"       # Keep HTTP port to avoid errors
+      - "8888:8080"   # Dashboard only
     labels:
-      - "traefik.enable=false"  # Disable Traefik for itself
+      traefik.enable: "false"
 
   # Enable direct port access for all web services
   pgadmin:
     ports:
       - "5050:80"
+    depends_on:
+      - postgres
     labels:
-      - "traefik.enable=false"  # Disable Traefik routing
+      traefik.enable: "false"
 
   rabbitmq:
     ports:
-      - "5672:5672"   # AMQP
+      - "5672:5672"   # AMQP (already exposed in base)
       - "15672:15672" # Management UI
     labels:
-      - "traefik.enable=false"
+      traefik.enable: "false"
 
   minio:
     ports:
       - "9000:9000"   # API
       - "9001:9001"   # Console
     environment:
-      # Remove domain-dependent settings
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin123
-      # Remove domain URLs
       MINIO_SERVER_URL: ""
       MINIO_BROWSER_REDIRECT_URL: ""
     labels:
-      - "traefik.enable=false"
+      traefik.enable: "false"
 
   keycloak:
     ports:
@@ -65,11 +59,12 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin123
       KC_HEALTH_ENABLED: 'true'
       KC_METRICS_ENABLED: 'true'
-      # Remove hostname requirement
       KC_HOSTNAME_STRICT: 'false'
       KC_HTTP_ENABLED: 'true'
-      # Remove proxy mode
       KC_PROXY: 'none'
+    depends_on:
+      postgres:
+        condition: service_healthy
     labels:
-      - "traefik.enable=false"
+      traefik.enable: "false"
 
