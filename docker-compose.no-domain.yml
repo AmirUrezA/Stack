@@ -1,0 +1,62 @@
+# Docker Compose Override for Server without Domain
+# 
+# This configuration enables direct port access without needing a domain name.
+# Use it with: docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml up -d
+#
+# Or copy this to docker-compose.override.yml to apply automatically
+
+version: '3.8'
+
+services:
+  # Disable Traefik or keep it for the dashboard only
+  traefik:
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--log.level=INFO"
+    ports:
+      - "8888:8080"   # Just the dashboard
+    labels: []  # Remove routing labels
+
+  # Enable direct port access for all web services
+  pgadmin:
+    ports:
+      - "5050:80"
+    labels: []  # Disable Traefik routing
+
+  rabbitmq:
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    labels: []
+
+  minio:
+    ports:
+      - "9000:9000"   # API
+      - "9001:9001"   # Console
+    environment:
+      # Remove domain-dependent settings
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    labels: []
+
+  keycloak:
+    ports:
+      - "8080:8080"
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/main_db
+      KC_DB_USERNAME: admin
+      KC_DB_PASSWORD: admin123
+      KC_DB_SCHEMA: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin123
+      KC_HEALTH_ENABLED: 'true'
+      KC_METRICS_ENABLED: 'true'
+      # Remove hostname requirement
+      KC_HOSTNAME_STRICT: 'false'
+      KC_HTTP_ENABLED: 'true'
+    labels: []
+

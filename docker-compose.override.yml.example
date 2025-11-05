@@ -1,0 +1,37 @@
+# docker-compose.override.yml.example
+#
+# Copy this file to docker-compose.override.yml and customize it for your needs
+# Docker Compose automatically applies override files to extend the base configuration
+#
+# cp docker-compose.override.yml.example docker-compose.override.yml
+
+version: '3.8'
+
+services:
+  # Example: Add custom PostgreSQL configuration
+  # postgres:
+  #   environment:
+  #     POSTGRES_DB: custom_db
+  #   ports:
+  #     - "5433:5432"  # Use different host port
+
+  # Example: Expose Redis without password (NOT for production!)
+  # redis:
+  #   command: redis-server
+
+  # Example: Add environment variables to Keycloak
+  # keycloak:
+  #   environment:
+  #     KC_HOSTNAME: localhost
+  #     KC_HTTP_RELATIVE_PATH: /auth
+
+  # Example: Add custom RabbitMQ vhost
+  # rabbitmq:
+  #   environment:
+  #     RABBITMQ_DEFAULT_VHOST: /myapp
+
+  # Example: Configure MinIO with custom region
+  # minio:
+  #   environment:
+  #     MINIO_REGION: us-east-1
+
