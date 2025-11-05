@@ -36,7 +36,7 @@ function Show-Help {
 
 function Start-Stack {
     Write-Host "`n🚀 Starting Stack Server (No Domain Mode)...`n" -ForegroundColor Cyan
-    docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml up -d
+    docker-compose -f docker-compose.direct-ports.yml up -d
     
     if ($LASTEXITCODE -eq 0) {
         $serverIP = Get-ServerIP
@@ -56,7 +56,7 @@ function Start-Stack {
 
 function Stop-Stack {
     Write-Host "`n🛑 Stopping Stack Server...`n" -ForegroundColor Cyan
-    docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml down
+    docker-compose -f docker-compose.direct-ports.yml down
     if ($LASTEXITCODE -eq 0) {
         Write-Host "`n✅ Stack Server stopped successfully!`n" -ForegroundColor Green
     }
@@ -64,7 +64,7 @@ function Stop-Stack {
 
 function Restart-Stack {
     Write-Host "`n🔄 Restarting Stack Server...`n" -ForegroundColor Cyan
-    docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml restart
+    docker-compose -f docker-compose.direct-ports.yml restart
     if ($LASTEXITCODE -eq 0) {
         Write-Host "`n✅ Stack Server restarted successfully!`n" -ForegroundColor Green
     }
@@ -72,12 +72,12 @@ function Restart-Stack {
 
 function Show-Status {
     Write-Host "`n📊 Stack Server Status`n" -ForegroundColor Cyan
-    docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml ps
+    docker-compose -f docker-compose.direct-ports.yml ps
 }
 
 function Show-Logs {
     Write-Host "`n📋 Stack Server Logs (Press Ctrl+C to exit)`n" -ForegroundColor Cyan
-    docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml logs -f
+    docker-compose -f docker-compose.direct-ports.yml logs -f
 }
 
 function Clean-Stack {
@@ -85,7 +85,7 @@ function Clean-Stack {
     $confirmation = Read-Host "Are you sure you want to continue? (yes/no)"
     if ($confirmation -eq 'yes') {
         Write-Host "`n🧹 Cleaning Stack Server...`n" -ForegroundColor Cyan
-        docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml down -v
+        docker-compose -f docker-compose.direct-ports.yml down -v
         if ($LASTEXITCODE -eq 0) {
             Write-Host "`n✅ Stack Server cleaned successfully!`n" -ForegroundColor Green
         }
