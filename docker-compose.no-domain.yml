@@ -1,54 +1,85 @@
 # Docker Compose Override for Server without Domain
 # 
-# This configuration enables direct port access without needing a domain name.
-# Traefik is kept for dashboard but services are accessible via direct ports.
+# This configuration enables Traefik routing with direct IP access
 # Use it with: docker-compose -f docker-compose.yml -f docker-compose.no-domain.yml up -d
+#
+# Access services at http://YOUR-IP/service-name or http://YOUR-IP:PORT
 
 version: '3.8'
 
 services:
-  # Keep Traefik running but disable routing
+  # Configure Traefik for IP-based and path-based routing
   traefik:
     command:
       - "--api.dashboard=true"
       - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
       - "--log.level=INFO"
+      - "--accesslog=true"
     ports:
-      - "8888:8080"   # Dashboard only
+      - "80:80"
+      - "443:443"
+      - "8888:8080"
     labels:
-      traefik.enable: "false"
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=PathPrefix(`/dashboard`) || PathPrefix(`/api`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=web"
 
-  # Enable direct port access for all web services
+  # pgAdmin - accessible at http://YOUR-IP/pgadmin
   pgadmin:
-    ports:
-      - "5050:80"
-    depends_on:
-      - postgres
     labels:
-      traefik.enable: "false"
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgadmin.rule=PathPrefix(`/pgadmin`)"
+      - "traefik.http.routers.pgadmin.entrypoints=web"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.pgadmin-stripprefix.stripprefix.prefixes=/pgadmin"
+      - "traefik.http.middlewares.pgadmin-addprefix.addprefix.prefix=/pgadmin"
+      - "traefik.http.routers.pgadmin.middlewares=pgadmin-stripprefix"
+      # Set X-Script-Name for pgAdmin
+      - "traefik.http.middlewares.pgadmin-headers.headers.customrequestheaders.X-Script-Name=/pgadmin"
+    ports:
+      - "5050:80"  # Also accessible directly
 
+  # RabbitMQ - accessible at http://YOUR-IP/rabbitmq
   rabbitmq:
-    ports:
-      - "5672:5672"   # AMQP (already exposed in base)
-      - "15672:15672" # Management UI
     labels:
-      traefik.enable: "false"
-
-  minio:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rabbitmq.rule=PathPrefix(`/rabbitmq`)"
+      - "traefik.http.routers.rabbitmq.entrypoints=web"
+      - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
+      - "traefik.http.middlewares.rabbitmq-stripprefix.stripprefix.prefixes=/rabbitmq"
+      - "traefik.http.routers.rabbitmq.middlewares=rabbitmq-stripprefix"
     ports:
-      - "9000:9000"   # API
-      - "9001:9001"   # Console
+      - "5672:5672"
+      - "15672:15672"  # Also accessible directly
+
+  # MinIO - accessible at http://YOUR-IP/minio
+  minio:
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin123
-      MINIO_SERVER_URL: ""
-      MINIO_BROWSER_REDIRECT_URL: ""
     labels:
-      traefik.enable: "false"
-
-  keycloak:
+      - "traefik.enable=true"
+      # MinIO Console
+      - "traefik.http.routers.minio-console.rule=PathPrefix(`/minio`)"
+      - "traefik.http.routers.minio-console.entrypoints=web"
+      - "traefik.http.routers.minio-console.service=minio-console"
+      - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
+      # MinIO API
+      - "traefik.http.routers.minio-api.rule=PathPrefix(`/minio-api`)"
+      - "traefik.http.routers.minio-api.entrypoints=web"
+      - "traefik.http.routers.minio-api.service=minio-api"
+      - "traefik.http.services.minio-api.loadbalancer.server.port=9000"
     ports:
-      - "8080:8080"
+      - "9000:9000"  # Also accessible directly
+      - "9001:9001"  # Also accessible directly
+
+  # Keycloak - accessible at http://YOUR-IP/keycloak
+  keycloak:
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/main_db
@@ -61,10 +92,18 @@ services:
       KC_METRICS_ENABLED: 'true'
       KC_HOSTNAME_STRICT: 'false'
       KC_HTTP_ENABLED: 'true'
-      KC_PROXY: 'none'
+      KC_PROXY: 'edge'
+      KC_HTTP_RELATIVE_PATH: '/keycloak'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=PathPrefix(`/keycloak`)"
+      - "traefik.http.routers.keycloak.entrypoints=web"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+      # Keycloak headers
+      - "traefik.http.middlewares.keycloak-headers.headers.customrequestheaders.X-Forwarded-Host=YOUR-IP"
+      - "traefik.http.middlewares.keycloak-headers.headers.customrequestheaders.X-Forwarded-Proto=http"
+    ports:
+      - "8080:8080"  # Also accessible directly
     depends_on:
       postgres:
         condition: service_healthy
-    labels:
-      traefik.enable: "false"
-
