@@ -8,7 +8,7 @@
 version: '3.8'
 
 services:
-  # Disable Traefik or keep it for the dashboard only
+  # Keep Traefik but only for the dashboard
   traefik:
     command:
       - "--api.dashboard=true"
@@ -16,21 +16,27 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--log.level=INFO"
+      # Add minimal entrypoint to prevent errors
+      - "--entrypoints.web.address=:80"
     ports:
-      - "8888:8080"   # Just the dashboard
-    labels: []  # Remove routing labels
+      - "8888:8080"   # Dashboard
+      - "80:80"       # Keep HTTP port to avoid errors
+    labels:
+      - "traefik.enable=false"  # Disable Traefik for itself
 
   # Enable direct port access for all web services
   pgadmin:
     ports:
       - "5050:80"
-    labels: []  # Disable Traefik routing
+    labels:
+      - "traefik.enable=false"  # Disable Traefik routing
 
   rabbitmq:
     ports:
       - "5672:5672"   # AMQP
       - "15672:15672" # Management UI
-    labels: []
+    labels:
+      - "traefik.enable=false"
 
   minio:
     ports:
@@ -40,7 +46,11 @@ services:
       # Remove domain-dependent settings
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin123
-    labels: []
+      # Remove domain URLs
+      MINIO_SERVER_URL: ""
+      MINIO_BROWSER_REDIRECT_URL: ""
+    labels:
+      - "traefik.enable=false"
 
   keycloak:
     ports:
@@ -58,5 +68,8 @@ services:
       # Remove hostname requirement
       KC_HOSTNAME_STRICT: 'false'
       KC_HTTP_ENABLED: 'true'
-    labels: []
+      # Remove proxy mode
+      KC_PROXY: 'none'
+    labels:
+      - "traefik.enable=false"
 
