@@ -43,12 +43,18 @@ function Start-Stack {
         
         Write-Host "`n✅ Stack Server started successfully!" -ForegroundColor Green
         Write-Host "`nServices available at:" -ForegroundColor Yellow
-        Write-Host "  Traefik:     http://${serverIP}:8888" -ForegroundColor White
-        Write-Host "  pgAdmin:     http://${serverIP}:5050" -ForegroundColor White
-        Write-Host "  RabbitMQ:    http://${serverIP}:15672" -ForegroundColor White
-        Write-Host "  MinIO:       http://${serverIP}:9001" -ForegroundColor White
-        Write-Host "  Keycloak:    http://${serverIP}:8080" -ForegroundColor White
-        Write-Host "`n  PostgreSQL:  ${serverIP}:5432" -ForegroundColor Gray
+        Write-Host "  Dashboard:   http://${serverIP}" -ForegroundColor White
+        Write-Host "  pgAdmin:     http://${serverIP}/pgadmin" -ForegroundColor White
+        Write-Host "  RabbitMQ:    http://${serverIP}/rabbitmq" -ForegroundColor White
+        Write-Host "  MinIO:       http://${serverIP}/minio" -ForegroundColor White
+        Write-Host "  Keycloak:    http://${serverIP}/keycloak" -ForegroundColor White
+        Write-Host "`nDirect port access:" -ForegroundColor Yellow
+        Write-Host "  pgAdmin:     http://${serverIP}:5050" -ForegroundColor Gray
+        Write-Host "  RabbitMQ:    http://${serverIP}:15672" -ForegroundColor Gray
+        Write-Host "  MinIO:       http://${serverIP}:9001" -ForegroundColor Gray
+        Write-Host "  Keycloak:    http://${serverIP}:8080" -ForegroundColor Gray
+        Write-Host "`nDatabase connections:" -ForegroundColor Yellow
+        Write-Host "  PostgreSQL:  ${serverIP}:5432" -ForegroundColor Gray
         Write-Host "  Redis:       ${serverIP}:6379" -ForegroundColor Gray
         Write-Host "  RabbitMQ:    ${serverIP}:5672`n" -ForegroundColor Gray
     }

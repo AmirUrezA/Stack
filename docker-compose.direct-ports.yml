@@ -8,6 +8,24 @@
 version: '3.8'
 
 services:
+  # Nginx - Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: stack-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - stack-network
+    depends_on:
+      - pgadmin
+      - rabbitmq
+      - minio
+      - keycloak
+
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
